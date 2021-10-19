@@ -1,0 +1,12 @@
+{
+    "name":"cb-t",
+    "title": "大正藏",
+    "description":"大正新修大藏經，基於CBETA DVD 2018",
+    "maintainer": "yapcheahshen@gmail.com",
+    "license": "CC0",
+    "format":"cbeta",
+    "catalog":"catalog.json",
+    "homepage":"https://github.com/accelon/cb-t",
+    "rootdir":"zip/",
+    "files":"T01.zip"
+}
