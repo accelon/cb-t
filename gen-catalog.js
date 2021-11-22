@@ -10,9 +10,9 @@ const items=readFileSync('./catalog.txt','utf8') //from cbeta dvd
 const out={};
 const buleis={};
 const authors={};
-const dynasties={}
-const dyna='宇文周 乞伏秦 姚秦 晉世 元魏 劉宋 符秦 東晉 西晉 曹魏 北涼 前涼 北周 北宋 南宋 後晉 後唐 南漢 高齊 東魏 北齊 前秦 蕭齊 南唐 後漢 北魏 後魏 西秦 後秦 高麗 新羅 朝鮮 晉 梁 日本 遼 夏 吳 隋 陳 唐 宋 元 明 清 民國'
-dyna.split(' ').forEach((it,idx)=>dynasties[it]=(idx+1));
+const era={}
+const Era='宇文周 乞伏秦 姚秦 晉世 元魏 劉宋 符秦 東晉 西晉 曹魏 北涼 前涼 北周 北宋 南宋 後晉 後唐 南漢 高齊 東魏 北齊 前秦 蕭齊 南唐 後漢 北魏 後魏 西秦 後秦 高麗 新羅 朝鮮 晉 梁 日本 遼 夏 吳 隋 陳 唐 宋 元 明 清 民國'
+Era.split(' ').forEach((it,idx)=>era[it]=(idx+1));
 
 //並序
 const suffix={};
@@ -27,8 +27,8 @@ const parseProducer=str=>{
     const parts=str.split(/[、 ．　]/);
     let  out='';
     parts.forEach(part=>{
-        if (part.length<4 && dynasties[part]) {
-            out+='^dy['+part+']';
+        if (part.length<4 && era[part]) {
+            out+='^er['+part+']';
             return;
         }
         let au=part;
