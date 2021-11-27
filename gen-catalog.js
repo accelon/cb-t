@@ -77,7 +77,7 @@ items.forEach(item=>{
     if (out[n]) {
         // console.log("repeated sutran "+n);  n220
     } else {
-        out[n]=title.replace(/\(.+?\)/,'')+ (p?' '+p:'');
+        out[n]=title.replace(/\(.+?\)/,'')+ (p?' '+p:'')+ '^bl['+bulei.replace('部類','')+']';
     }
 })
 writeFileSync('catalog.json',JSON.stringify(out,'',' '),'utf8');
