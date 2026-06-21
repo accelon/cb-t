@@ -12,10 +12,11 @@ const volumname={
 catalogtsv.shift();
 catalogtsv.map(it=>catalog[it[0]]=it[2]  );
 const ctx={catalog,volumname};
-const vols=[];
+let vols=[];
 for (let i=1;i<56;i++) {
     vols.push( 'T'+i.toString().padStart(2,'0'));
 }
+//vols=['T09']
 export const convall=async (vol)=>{
     const out=[];
     const files=filesFromPattern("*.xml",srcdir+vol);
