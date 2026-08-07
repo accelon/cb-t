@@ -2,7 +2,7 @@ import {meta_cbeta,filesFromPattern,nodefs, DOMFromString,xpath,walkDOM,
     writeChanged, readTextLines, readTextContent } from 'ptk/nodebundle.cjs'
 await nodefs;
 const srcdir='T/'
-const outdir='tsv/'
+const outdir='jsonl/'
 const catalog={}
 const catalogtsv=readTextLines('off/0catalog.tsv').map(it=>it.split('\t'));
 catalogtsv.shift();
@@ -12,26 +12,42 @@ let vols=[];
 for (let i=1;i<56;i++) {
     vols.push( 'T'+i.toString().padStart(2,'0'));
 }
-vols=['T05']
+//vols=['T05']
 const tidy=content=>{
     return content.replace(/([、，；]?)<caesura[^>]*\/>/g,(m,m1)=>m1||'　');
 }
 const emitContent=(sutraid,content)=>{
     const out=content.join('\n').replace(/\n+/g,'\n').trim();
-    if (out.length) writeChanged(outdir+sutraid+'.tsv',out,true);
+    if (out.length) writeChanged(outdir+ctx.vol+'.'+sutraid+'.jsonl',out,true);
+}
+const emitEntry=()=>{
+    if (ctx.paraid=='' && ctx.out=='') return; 
+    ctx.jsonl.push('["'+ctx.paraid+'","'
+        +ctx.out.replace(/\n+/g,'\n').trim().replace(/"/g,'\'')+'"]');
+    ctx.out='';
 }
 let psutraid='';
+
 const onOpen={
     lb:(el)=>{
-        return ctx.vol+'p'+el.attrs.n+'\t'
+        if (ctx.paraid==='') {
+            ctx.paraid=el.attrs.n.replace(/^0+/,'').replace(/([abc])0/,'$1');
+        } else {
+            return '\\n';
+        }
     }
     ,p:(el)=>{
-        return '^p'
+        const paraid=el.attrs['xml:id'].slice(4,12).replace(/p0*/,'').replace(/([abc])0/,'$1');
+        if (ctx.paraid!==paraid) emitEntry(paraid);
+        ctx.paraid=paraid;
     }
     ,"cb:t":(el,ctx)=>{
         if (el.attrs.place=='foot') ctx.hide=true;
     }
     ,"cb:mulu":(el,ctx)=>{
+        ctx.hide=true;
+    }
+    ,"cb:docNumber":(el,ctx)=>{
         ctx.hide=true;
     }
     ,g:(el,ctx)=>{
@@ -47,13 +63,15 @@ const onOpen={
 }
 const onClose={
     "cb:t":(el,ctx)=>ctx.hide=false,
-    "cb:mulu":(el,ctx)=>ctx.hide=false
+    "cb:mulu":(el,ctx)=>ctx.hide=false,
+    "cb:docNumber":(el,ctx)=>ctx.hide=false
 }
 const toSimpleText=(vol,content)=>{
     ctx.vol=vol;
-    const out=[];
+    ctx.jsonl=[];
+    ctx.paraid='';
     const onText=(text)=>{
-        return ctx.hide?'':text;
+        return (ctx.hide?'':text).replace(/\n/g,'');
     }    
     content=content.replace(/<note .+?>.+?<\/note>/g,'')
     
@@ -63,7 +81,8 @@ const toSimpleText=(vol,content)=>{
     ctx.charmap=meta_cbeta.buildCharMap(el);
 
     walkDOM(body,ctx,onOpen,onClose,onText);
-    const t=ctx.out;
+    emitEntry(ctx.paraid);
+    const t=ctx.jsonl.join('\n');
     ctx.out=''
     return t;
 }
@@ -72,7 +91,8 @@ const convall=async (vol)=>{
     const files=filesFromPattern("*.xml",srcdir+vol);
     for (let i=0;i<files.length;i++) {
         ctx.fn=files[i];
-        let [m,sutraid,juan]=files[i].match(/T\d\dn([\da-z]+)_(\d+)/);
+       
+        let [m,sutraid,juan]=files[i].match(/T\d\dn([\da-z]+)_(\d+)/i);
         if (vol=='T06') sutraid+='b'
         if (vol=='T07') sutraid+='c'
 
@@ -82,7 +102,7 @@ const convall=async (vol)=>{
             emitContent(psutraid,out);
             out.length=0;
         }
-        out.push(toSimpleText(vol,xmlcontent));
+        out.push(toSimpleText(vol,xmlcontent,ctx));
         psutraid=sutraid;
     }
     emitContent( psutraid,out);
